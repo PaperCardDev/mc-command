@@ -89,6 +89,9 @@ public abstract class NewMcCommand implements CommandExecutor, TabCompleter {
         } catch (IllegalArgumentException ignored) {
         }
 
+        final OfflinePlayer player = server.getOfflinePlayerIfCached(nameOrUuid);
+        if (player != null) return player;
+
         for (OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
             final String name = offlinePlayer.getName();
             if (nameOrUuid.equals(name)) return offlinePlayer;
@@ -232,9 +235,9 @@ public abstract class NewMcCommand implements CommandExecutor, TabCompleter {
                 if (theCommand == null) return null;
 
                 final String[] subArgs = new String[args.length - 1];
-                System.arraycopy(args, 1, args, 0, subArgs.length);
+                System.arraycopy(args, 1, subArgs, 0, subArgs.length);
 
-                return theCommand.onTabComplete(sender, command, label, args);
+                return theCommand.onTabComplete(sender, command, label, subArgs);
             }
         }
     }
