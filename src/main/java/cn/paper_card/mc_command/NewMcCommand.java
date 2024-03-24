@@ -4,7 +4,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.command.*;
+import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 public abstract class NewMcCommand implements CommandExecutor, TabCompleter {
@@ -47,6 +53,64 @@ public abstract class NewMcCommand implements CommandExecutor, TabCompleter {
     protected abstract boolean canExecute(@NotNull CommandSender commandSender);
 
     protected abstract void appendPrefix(@NotNull TextComponent.Builder text);
+
+    protected @NotNull Permission addSubPermission(@NotNull PluginManager pluginManager, @NotNull Permission permParent) {
+        final Permission p = new Permission(permParent.getName() + "." + this.getLabel());
+        pluginManager.addPermission(p);
+        return p;
+    }
+
+    public static @NotNull List<String> tabCompleteOfflinePlayerNames(@NotNull String arg, @NotNull Server server, boolean ignoreEmptyArg, @Nullable String tip) {
+        final LinkedList<String> list = new LinkedList<>();
+
+        final Runnable runnable = () -> {
+            for (OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
+                final String name = offlinePlayer.getName();
+                if (name == null) continue;
+                if (name.startsWith(arg)) list.add(name);
+            }
+        };
+
+        if (arg.isEmpty()) {
+            if (tip != null) list.add(tip);
+            if (!ignoreEmptyArg) runnable.run();
+        } else {
+            runnable.run();
+        }
+        return list;
+    }
+
+    public static @Nullable OfflinePlayer parseOfflinePlayerName(@NotNull String nameOrUuid, @NotNull Server server) {
+
+        try {
+            final UUID uuid = UUID.fromString(nameOrUuid);
+            return server.getOfflinePlayer(uuid);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        for (OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
+            final String name = offlinePlayer.getName();
+            if (nameOrUuid.equals(name)) return offlinePlayer;
+        }
+
+        return null;
+    }
+
+    public static @NotNull List<String> tabCompleteOnlinePlayerNames(@NotNull String arg, @NotNull String tip, @NotNull Server server) {
+        final LinkedList<String> list = new LinkedList<>();
+        for (Player onlinePlayer : server.getOnlinePlayers()) {
+            final String name = onlinePlayer.getName();
+            if (name.startsWith(arg)) list.add(name);
+        }
+        return list;
+    }
+
+    public static @Nullable Player parseOnlinePlayerName(@NotNull String name, @NotNull Server server) {
+        for (Player onlinePlayer : server.getOnlinePlayers()) {
+            if (onlinePlayer.getName().equals(name)) return onlinePlayer;
+        }
+        return null;
+    }
 
     public static abstract class HasSub extends NewMcCommand {
 
