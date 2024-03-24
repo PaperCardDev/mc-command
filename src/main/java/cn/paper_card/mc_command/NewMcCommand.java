@@ -52,7 +52,8 @@ public abstract class NewMcCommand implements CommandExecutor, TabCompleter {
 
     protected abstract boolean canExecute(@NotNull CommandSender commandSender);
 
-    protected abstract void appendPrefix(@NotNull TextComponent.Builder text);
+    protected void appendPrefix(@NotNull TextComponent.Builder text) {
+    }
 
     protected @NotNull Permission addSubPermission(@NotNull PluginManager pluginManager, @NotNull Permission permParent) {
         final Permission p = new Permission(permParent.getName() + "." + this.getLabel());
